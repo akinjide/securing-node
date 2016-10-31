@@ -5,6 +5,9 @@ var sessions = require('client-sessions');
 var bcrypt = require('bcryptjs');
 var csrf = require('csurf');
 var helmet = require('helmet');
+var errorhandler = require('errorhandler');
+var notifier = require('node-notifier');
+var responseTime = require('response-time');
 
 var Schema = mongoose.Schema;
 var ObjectId = Schema.ObjectId;
@@ -18,7 +21,7 @@ var User = mongoose.model('User', new Schema({
   salt: { type: String, select: false }
 }));
 
-// Connect to mongoDB 
+// Connect to mongoDB
 mongoose.connect('mongodb://localhost/auth');
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
@@ -41,9 +44,18 @@ app.use(sessions({
   ephemeral :true,
   activeDuration: 5 * 60 * 1000
 }));
-
 app.use(helmet());
 app.use(csrf());
+app.use(responseTime());
+
+if (app.get('env') === 'development') app.use(errorhandler({ log: errNotification}));
+
+function errNotification(err, str, req) {
+	notifier.notify({
+		title: 'Error in ' + req.method + ' ' + req.url,
+		message: str
+	});
+}
 
 app.use(function(req, res, next) {
   if (req.session && req.session.user) {
@@ -83,7 +95,7 @@ app.get('/register', function(req, res) {
 app.post('/register', function(req, res) {
   var salt = bcrypt.genSaltSync(10);
   var hash = bcrypt.hashSync(req.body.password, salt);
-  
+
   var user = new User({
     firstName: req.body.firstName,
     lastName: req.body.lastName,
@@ -95,7 +107,7 @@ app.post('/register', function(req, res) {
   user.save(function(err) {
     if (err) {
       var error = 'Something bad happened! Try again!';
-      
+
       if (err.code === 11000) {
         error = 'That email is already taken, try another.';
       }
@@ -146,7 +158,7 @@ app.get('/dashboard', requireLogin, function(req, res) {
   else {
     res.redirect('/login');
   }
-}); 
+});
 
 app.get('/logout', function(req, res) {
   req.session.reset();

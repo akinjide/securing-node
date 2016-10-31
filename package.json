@@ -8,13 +8,17 @@
     "body-parser": "^1.14.1",
     "client-sessions": "^0.7.0",
     "csurf": "^1.8.3",
+    "errorhandler": "^1.4.3",
     "express": "^4.13.3",
     "helmet": "^2.3.0",
     "jade": "^1.11.0",
-    "mongoose": "^4.2.9"
+    "mongoose": "^4.2.9",
+    "node-notifier": "^4.6.1",
+    "response-time": "^2.3.1"
   },
   "devDependencies": {},
   "scripts": {
+    "start": "if [ '$NODE_ENV' = 'production' ]; then node app.js; else nodemon app.js; fi",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Akinjide Bankole <r@akinjide.me>",
